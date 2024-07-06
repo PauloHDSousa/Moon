@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class PlayerAim : MonoBehaviour
@@ -6,6 +7,7 @@ public class PlayerAim : MonoBehaviour
     [Header("References")]
     [SerializeField] PlayerInput playerInput;
     [SerializeField] PlayerMovement playerMovement;
+    [SerializeField] PlayerWeaponController playerWeaponController;
 
     [Header("Aim")]
     [SerializeField] LayerMask aimLayerMask;
@@ -21,6 +23,11 @@ public class PlayerAim : MonoBehaviour
     [Range(3f, 5f)]
     [SerializeField] float cameraSensitivity = 5f;
 
+    [Space]
+    [Header("Aim Visuals - Laser")]
+    [SerializeField] LineRenderer aimLaser;
+
+
     private Vector2 aimInput;
     private RaycastHit lastKnowMouseHit;
 
@@ -32,15 +39,62 @@ public class PlayerAim : MonoBehaviour
 
     void Update()
     {
+        UpdateCameraPosition();
         UpdateAimPosition();
+        UpdateAimLaser();
+    }
+
+    private void UpdateAimLaser()
+    {
+        float gunDistance = 4;
+        Transform gunpoint = playerWeaponController.GunPoint();
+        Vector3 laserDirection = playerWeaponController.BulletDirection();
+        Vector3 endPoint = gunpoint.position + laserDirection * gunDistance;
+
+        if (Physics.Raycast(gunpoint.position, laserDirection, out RaycastHit hit, gunDistance))
+        {
+            endPoint = hit.point;
+        }
+
+
+        aimLaser.SetPosition(0, gunpoint.position);
+        aimLaser.SetPosition(1, endPoint);
+
+    }
+
+    public Transform Target()
+    {
+        return Target(GetMouseHitInfo());
+    }
+    public Transform Target(RaycastHit hitInfo)
+    {
+        Transform target = null;
+        if (hitInfo.transform.GetComponent<Target>() != null)
+            target = hitInfo.transform;
+
+        return target;
     }
 
     private void UpdateAimPosition()
     {
-        Vector3 mousePos = GetMouseHitInfo().point;
+        RaycastHit hitInfo = GetMouseHitInfo();
+        var target = Target(hitInfo);
+        if (target != null)
+        {
+            Debug.Log("Target");
+            aim.position = target.position;
+            return;
+        }
+        Vector3 mousePos = hitInfo.point;
         Vector3 aimPos = new Vector3(mousePos.x, transform.position.y + 1, mousePos.z);
+
         aim.position = aimPos;
+    }
+
+    void UpdateCameraPosition()
+    {
         cameraTarget.position = Vector3.Lerp(cameraTarget.position, DesiredCameraPosition(), cameraSensitivity * Time.deltaTime);
+
     }
 
     public Vector3 DesiredCameraPosition()

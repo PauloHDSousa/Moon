@@ -35,12 +35,6 @@ public class PlayerWeaponVisuals : MonoBehaviour
             CheckWeaponSwitch();
         }
 
-        if (Input.GetKey(KeyCode.R) && rig.weight >= 1)
-        {
-            animator.SetTrigger("Reload");
-            PauseRig();
-        }
-
         if (rigShouldBeIncreased)
         {
             rig.weight += rigIncreaseStep * Time.deltaTime;
@@ -54,6 +48,12 @@ public class PlayerWeaponVisuals : MonoBehaviour
             if (leftHandIK.weight >= 1)
                 leftHandIKShouldBeIncreased = false;
         }
+    }
+
+    public void PlayReloadAnimation()
+    {
+        animator.SetTrigger("Reload");
+        PauseRig();
     }
 
     private void PauseRig()
